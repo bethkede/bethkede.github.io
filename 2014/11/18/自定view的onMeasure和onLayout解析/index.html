@@ -66,6 +66,8 @@
 <p>onMeasure的作用是告诉父控件你需要的宽度和高度，也就是设置自己本身宽高。</p>
 <pre><code><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span>(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)
 </code></pre><p>首先onMeasure这个方法传递的widthMeasureSpec和heightMeasureSpec这2个参数，这2个参数是父View调用的时候传递过来的。里面包含了View的宽高的类型和数值。</p>
+<a id="more"></a>
+
 <p>···java<br>public static int getDefaultSize(int size, int measureSpec) {<br>    int result = size;<br>    int specMode = MeasureSpec.getMode(measureSpec);<br>    int specSize = MeasureSpec.getSize(measureSpec);<br>    switch (specMode) {<br>    case MeasureSpec.UNSPECIFIED:<br>         result = size;<br>    break;<br>    case MeasureSpec.AT_MOST:<br>    case MeasureSpec.EXACTLY:<br>        result = specSize;<br>    break;<br>    }<br>    return result;<br>}<br>···<br>MeasureSpec.EXACTLY：父视图希望子视图的大小应该是specSize中指定的。<br>MeasureSpec.AT_MOST：子视图的大小最多是specSize中指定的值，也就是说不建议子视图的大小超过specSize中给定的值。<br>MeasureSpec.UNSPECIFIED：我们可以随意指定视图的大小。</p>
 <p>同时MeasureSpec还有静态的方法供我们调用。我们可以讲View的宽高的MeasureSpec修改成我们自己想要的。</p>
 <pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">makeMeasureSpec</span> (<span class="keyword">int</span> size, <span class="keyword">int</span> mode)
