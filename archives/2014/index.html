@@ -57,6 +57,75 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2014-11-18T02:17:54.000Z"><a href="/2014/11/18/自定view的onMeasure和onLayout解析/">11月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/18/自定view的onMeasure和onLayout解析/">自定view的onMeasure和onLayout解析</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1 id="自定view的onMeasure和onLayout解析">自定view的onMeasure和onLayout解析</h1>
+<h2 id="onMeasure">onMeasure</h2>
+<p>onMeasure的作用是告诉父控件你需要的宽度和高度，也就是设置自己本身宽高。</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span>(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)
+</code></pre><p>首先onMeasure这个方法传递的widthMeasureSpec和heightMeasureSpec这2个参数，这2个参数是父View调用的时候传递过来的。里面包含了View的宽高的类型和数值。</p>
+<p>···java<br>public static int getDefaultSize(int size, int measureSpec) {<br>    int result = size;<br>    int specMode = MeasureSpec.getMode(measureSpec);<br>    int specSize = MeasureSpec.getSize(measureSpec);<br>    switch (specMode) {<br>    case MeasureSpec.UNSPECIFIED:<br>         result = size;<br>    break;<br>    case MeasureSpec.AT_MOST:<br>    case MeasureSpec.EXACTLY:<br>        result = specSize;<br>    break;<br>    }<br>    return result;<br>}<br>···<br>MeasureSpec.EXACTLY：父视图希望子视图的大小应该是specSize中指定的。<br>MeasureSpec.AT_MOST：子视图的大小最多是specSize中指定的值，也就是说不建议子视图的大小超过specSize中给定的值。<br>MeasureSpec.UNSPECIFIED：我们可以随意指定视图的大小。</p>
+<p>同时MeasureSpec还有静态的方法供我们调用。我们可以讲View的宽高的MeasureSpec修改成我们自己想要的。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">makeMeasureSpec</span> (<span class="keyword">int</span> size, <span class="keyword">int</span> mode)
+</code></pre><p>如果我们自定义的是一个ViewGroup也需要高度子View我们能给他的宽高和数字和类型。<br>例如：<br>···<br>    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {<br>        super.onMeasure(widthMeasureSpec, heightMeasureSpec);<br>        int parentWidth = MeasureSpec.getSize(widthMeasureSpec);<br>        int childWidth = (int) ((parentWidth - 3 <em> driverSize) / 4f);<br>        int count = getChildCount();<br>        for (int i = 0; i &lt; count; i++) {<br>            getChildAt(i).measure(MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY),<br>                    MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY));<br>        }<br>        int heightCount = count % 4 == 0 ? count / 4 : count / 4 + 1;<br>        int height = heightCount </em> childWidth + (heightCount - 1) * driverSize;<br>        setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));<br>    }<br>···</p>
+<p>当然有时我们不会明确的知道这个View的高度和宽度，想测量他的实际大小，里提供一种办法。</p>
+<pre><code>child.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
+<span class="keyword">int</span> width = child.getMeasuredWidth();
+<span class="keyword">int</span> height = child.getMeasuredHeight();
+</code></pre><p>  不指定画的measure的大小，等待measure完取出宽高的值。</p>
+<h2 id="onLayout">onLayout</h2>
+<p>onLayout就是指在ViewGroup里面子View的排布，你想讲第一个子View放在那里。<br>调用View的layout方法就会拜访这个View的位置。当然如果写的复杂一些会判断Visibility，padding等，写的简单一些也可以。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">layout</span> (<span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b)
+</code></pre><p>例如：</p>
+<p>···<br>protected void onLayout(boolean changed, int l, int t, int r, int b) {<br>        int count = getChildCount();<br>        int parentWidth = r - l;<br>        View view;<br>        int left = 0;<br>        int top = 0;<br>        int width = 0;<br>        int height = 0;<br>        for (int i = 0; i &lt; count; i++) {<br>            view = getChildAt(i);<br>            width = view.getMeasuredWidth();<br>            height = view.getMeasuredHeight();</p>
+<pre><code>        <span class="keyword">if</span> (<span class="keyword">left</span> + width &gt; parentWidth) {
+            top += (height + driverSize);
+            <span class="keyword">left</span> = <span class="number">0</span>;
+        }
+        view.layout(<span class="keyword">left</span>, top, <span class="keyword">left</span> + width, top + height);
+        <span class="keyword">left</span> += (width + driverSize);
+
+    }
+
+}
+</code></pre><p>···</p>
+<p>举个例子LinearLayout的onLayout实例</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span>(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b) {</div><div class="line">    <span class="keyword">if</span> (mOrientation == VERTICAL) {</div><div class="line">        layoutVertical();</div><div class="line">    } <span class="keyword">else</span> {</div><div class="line">        layoutHorizontal();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div></pre></td><td class="code"><pre><div class="line"> <span class="keyword">void</span> layoutVertical() {</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> paddingLeft = mPaddingLeft;</div><div class="line"></div><div class="line">    <span class="keyword">int</span> childTop;</div><div class="line">    <span class="keyword">int</span> childLeft;</div><div class="line">    </div><div class="line">    <span class="comment">// Where right end of child should go</span></div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> width = mRight - mLeft;</div><div class="line">    <span class="keyword">int</span> childRight = width - mPaddingRight;</div><div class="line">    </div><div class="line">    <span class="comment">// Space available for child</span></div><div class="line">    <span class="keyword">int</span> childSpace = width - paddingLeft - mPaddingRight;</div><div class="line">    </div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> <span class="keyword">count</span> = getVirtualChildCount();</div><div class="line"></div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> majorGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> minorGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;</div><div class="line"></div><div class="line">    <span class="keyword">switch</span> (majorGravity) {</div><div class="line">       <span class="keyword">case</span> Gravity.BOTTOM:</div><div class="line">           <span class="comment">// mTotalLength contains the padding already</span></div><div class="line">           childTop = mPaddingTop + mBottom - mTop - mTotalLength;</div><div class="line">           <span class="keyword">break</span>;</div><div class="line"></div><div class="line">           <span class="comment">// mTotalLength contains the padding already</span></div><div class="line">       <span class="keyword">case</span> Gravity.CENTER_VERTICAL:</div><div class="line">           childTop = mPaddingTop + (mBottom - mTop - mTotalLength) / <span class="number">2</span>;</div><div class="line">           <span class="keyword">break</span>;</div><div class="line"></div><div class="line">       <span class="keyword">case</span> Gravity.TOP:</div><div class="line">       <span class="keyword">default</span>:</div><div class="line">           childTop = mPaddingTop;</div><div class="line">           <span class="keyword">break</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="keyword">count</span>; i++) {</div><div class="line">        <span class="keyword">final</span> View child = getVirtualChildAt(i);</div><div class="line">        <span class="keyword">if</span> (child == <span class="keyword">null</span>) {</div><div class="line">            childTop += measureNullChild(i);</div><div class="line">        } <span class="keyword">else</span> <span class="keyword">if</span> (child.getVisibility() != GONE) {</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> childWidth = child.getMeasuredWidth();</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> childHeight = child.getMeasuredHeight();</div><div class="line">            </div><div class="line">            <span class="keyword">final</span> LinearLayout.LayoutParams lp =</div><div class="line">                    (LinearLayout.LayoutParams) child.getLayoutParams();</div><div class="line">            </div><div class="line">            <span class="keyword">int</span> gravity = lp.gravity;</div><div class="line">            <span class="keyword">if</span> (gravity &lt; <span class="number">0</span>) {</div><div class="line">                gravity = minorGravity;</div><div class="line">            }</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> layoutDirection = getLayoutDirection();</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> absoluteGravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);</div><div class="line">            <span class="keyword">switch</span> (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {</div><div class="line">                <span class="keyword">case</span> Gravity.CENTER_HORIZONTAL:</div><div class="line">                    childLeft = paddingLeft + ((childSpace - childWidth) / <span class="number">2</span>)</div><div class="line">                            + lp.leftMargin - lp.rightMargin;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Gravity.RIGHT:</div><div class="line">                    childLeft = childRight - childWidth - lp.rightMargin;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Gravity.LEFT:</div><div class="line">                <span class="keyword">default</span>:</div><div class="line">                    childLeft = paddingLeft + lp.leftMargin;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">            }</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (hasDividerBeforeChildAt(i)) {</div><div class="line">                childTop += mDividerHeight;</div><div class="line">            }</div><div class="line"></div><div class="line">            childTop += lp.topMargin;</div><div class="line">            setChildFrame(child, childLeft, childTop + getLocationOffset(child),</div><div class="line">                    childWidth, childHeight);</div><div class="line">            childTop += childHeight + lp.bottomMargin + getNextLocationOffset(child);</div><div class="line"></div><div class="line">            i += getChildrenSkipCount(child, i);</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2014-11-18T01:58:38.000Z"><a href="/2014/11/18/hexo-quick-start/">11月 18 2014</a></time>
       
       
