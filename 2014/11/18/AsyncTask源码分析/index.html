@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>AsyncTask源码分析 | Bethkede&#39;s blog</title>
+  <meta name="author" content="bethkede">
+  
+  <meta name="description" content="This is a blog of android">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="AsyncTask源码分析"/>
+  <meta property="og:site_name" content="Bethkede&#39;s blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Bethkede&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Bethkede&#39;s blog</a></h1>
+  <h2><a href="/">有时候生存往往比命运还残酷，只是没有人愿意认输</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-11-18T05:54:52.000Z"><a href="/2014/11/18/AsyncTask源码分析/">11月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title">AsyncTask源码分析</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>AsyncTask 是Android提供的一种异步任务，可以很方便的在应用中执行下载等可能阻塞UI Thread的任务。可以使用Thread+Handler来代替，那么他是怎么工作的呢</p>
+<a id="more"></a>
+
+<p>首先更新UI的操作只能在主线程来执行的，如果使用Thead+Handler是通过Handler发送到了主线程来执行，那么AsyncTask是怎么作的呢</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">private <span class="keyword">static</span> class <span class="type">InternalHandler</span> extends <span class="type">Handler</span> {</div><div class="line">    @<span class="type">SuppressWarnings</span>({<span class="string">"unchecked"</span>, <span class="string">"RawUseOfParameterizedType"</span>})</div><div class="line">    @<span class="type">Override</span></div><div class="line">    public <span class="type">void</span> handleMessage(<span class="type">Message</span> msg) {</div><div class="line">        <span class="type">AsyncTaskResult</span> <span class="literal">result</span> = (<span class="type">AsyncTaskResult</span>) msg.obj;</div><div class="line">        switch (msg.what) {</div><div class="line">            <span class="keyword">case</span> <span class="type">MESSAGE_POST_RESULT</span>:</div><div class="line">                // <span class="type">There</span> <span class="keyword">is</span> only one <span class="literal">result</span></div><div class="line">                <span class="literal">result</span>.mTask.finish(<span class="literal">result</span>.mData[<span class="number">0</span>]);</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            <span class="keyword">case</span> <span class="type">MESSAGE_POST_PROGRESS</span>:</div><div class="line">                <span class="literal">result</span>.mTask.onProgressUpdate(<span class="literal">result</span>.mData);</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div><div class="line"></div><div class="line"> private <span class="type">Result</span> postResult(<span class="type">Result</span> <span class="literal">result</span>) {</div><div class="line">    @<span class="type">SuppressWarnings</span>(<span class="string">"unchecked"</span>)</div><div class="line">    <span class="type">Message</span> message = sHandler.obtainMessage(<span class="type">MESSAGE_POST_RESULT</span>,</div><div class="line">            new <span class="type">AsyncTaskResult</span>&lt;<span class="type">Result</span>&gt;(this, <span class="literal">result</span>));</div><div class="line">    message.sendToTarget();</div><div class="line">    <span class="keyword">return</span> <span class="literal">result</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>AsyncTask里面自定义了一个Handler，当需要把结果回调给UI操作的时候会调用handler。</p>
+<p>线程是CPU分配的时间片，不论怎么写都会使用线程的，那么AsyncTask是怎么使用的呢。首先来看线程池是怎么写的。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Executor SERIAL_EXECUTOR = Utils.hasHoneycomb() ? <span class="keyword">new</span> SerialExecutor() :Executors.newSingleThreadExecutor(sThreadFactory);</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Executor THREAD_POOL_EXECUTOR</div><div class="line">        = <span class="keyword">new</span> ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE,</div><div class="line">        TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory,</div><div class="line">        <span class="keyword">new</span> ThreadPoolExecutor.DiscardOldestPolicy());</div><div class="line"></div><div class="line"><span class="annotation">@TargetApi</span>(<span class="number">11</span>)</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SerialExecutor</span> <span class="keyword">implements</span> <span class="title">Executor</span> </span>{</div><div class="line">    <span class="keyword">final</span> ArrayDeque&lt;Runnable&gt; mTasks = <span class="keyword">new</span> ArrayDeque&lt;Runnable&gt;();</div><div class="line">    Runnable mActive;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">execute</span>(<span class="keyword">final</span> Runnable r) {</div><div class="line">        mTasks.offer(<span class="keyword">new</span> Runnable() {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    r.run();</div><div class="line">                } <span class="keyword">finally</span> {</div><div class="line">                    scheduleNext();</div><div class="line">                }</div><div class="line">            }</div><div class="line">        });</div><div class="line">        <span class="keyword">if</span> (mActive == <span class="keyword">null</span>) {</div><div class="line">            scheduleNext();</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">protected</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">scheduleNext</span>() {</div><div class="line">        <span class="keyword">if</span> ((mActive = mTasks.poll()) != <span class="keyword">null</span>) {</div><div class="line">            THREAD_POOL_EXECUTOR.execute(mActive);</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<p>如果API小于11使用Executors.newSingleThreadExecutor(sThreadFactory)，创建一个单线程的线程池。这个线程池只有一个线程在工作,也就是相当于单线程串行执行所有任务来保证任务顺序执行。</p>
+<p>如果API大于等于11使用SerialExecutor，但是scheduleNext的时候却将任务放入THREAD_POOL_EXECUTOR里面了，SerialExecutor的作用是让任务顺序执行，然后将Task放入线程池。<br>为什么在API11使用了SerialExecutor呢？<br>首先来看ArrayDeque，因为ArrayDeque不是线程安全的，所以，用作堆栈时快于 Stack，在用作队列时快于 LinkedList。而newSingleThreadExecutor使用的是线程安全的LinkedBlockingQueue。这样即保证了线程串行又增加了效率。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span>(ThreadFactory threadFactory) {</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService</div><div class="line">            (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,</div><div class="line">                                    <span class="number">0</span>L, TimeUnit.MILLISECONDS,</div><div class="line">                                    <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(),</div><div class="line">                                    threadFactory));</div><div class="line">    }</div></pre></td></tr></table></figure>
+
+
+
+<p>使用AsyncTask的时候会传入泛型，但是Thread和Runnable是不支持的，这里使用的是可以有返回值的Callable，配合FutureTask来使用。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+ 
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"bethkde"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+
+<nav id="pagination" >
+    
+    
+    <a href="/2014/11/18/View-的Touch事件/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://baidu.com/" title="Baidu">Baidu</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2014 bethkede
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
