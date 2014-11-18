@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Handler原理解析 | Bethkede&#39;s blog</title>
+  <meta name="author" content="bethkede">
+  
+  <meta name="description" content="This is a blog of android">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Handler原理解析"/>
+  <meta property="og:site_name" content="Bethkede&#39;s blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Bethkede&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Bethkede&#39;s blog</a></h1>
+  <h2><a href="/">有时候生存往往比命运还残酷，只是没有人愿意认输</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-11-18T07:33:29.000Z"><a href="/2014/11/18/Handler原理解析/">11月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title">Handler原理解析</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>Handler的作用是向某一线程的MessageQueue插入消息或者拿到MessageQueue抛出的消息。平时我们使用Hander来更新UI，就是将Message插入到主线程的MessageQueue执行的。那么他是如何实现的呢？</p>
+<a id="more"></a>
+
+<p>来看一下Handler默认的构造函数,Handler会拿到Looper和MessageQueue对象。这样只需要将Message放入到Handler拿到的MessageQueue里面就OK了。这个线程的Looper会取到MessageQueue里面的Message去执行。</p>
+<pre><code><span class="keyword">public</span> <span class="title">Handler</span>() {
+    <span class="keyword">this</span>(<span class="keyword">null</span>, <span class="keyword">false</span>);
+}
+
+<span class="keyword">public</span> <span class="title">Handler</span>(Callback callback, boolean <span class="keyword">async</span>) {
+    <span class="keyword">if</span> (FIND_POTENTIAL_LEAKS) {
+        final Class&lt;? extends Handler&gt; klass = getClass();
+        <span class="keyword">if</span> ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &amp;&amp;
+                (klass.getModifiers() &amp; Modifier.STATIC) == <span class="number">0</span>) {
+            Log.w(TAG, <span class="string">"The following Handler class should be static or leaks might occur: "</span> +
+                klass.getCanonicalName());
+        }
+    }
+    mLooper = Looper.myLooper();
+    <span class="keyword">if</span> (mLooper == <span class="keyword">null</span>) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(
+            <span class="string">"Can't create handler inside thread that has not called Looper.prepare()"</span>);
+    }
+    mQueue = mLooper.mQueue;
+    mCallback = callback;
+    mAsynchronous = <span class="keyword">async</span>;
+}
+</code></pre><p>那么Handler是怎么获取到Looper对象的呢?Looper.myLooper是通过ThreadLocal来获取的。Looper的成员变量里面有MessageQueue。一个线程通过 ThreadLocal 和一个 Looper 对应,即 Map<threadlocal,looper>, 而一个Looper拥有一个 MessageQueue,所以一个 Thread就和一个 MessageQueue关联起来了。那么Thread里面的looper哪里来呢？</threadlocal,looper></p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">prepare</span>(<span class="keyword">boolean</span> quitAllowed) {
+    <span class="comment">//调用此方法的线程是否在 全局变量 sThreadLocal(即Map&lt;Thread,Looper&gt;)中存有一组以此线程为键的键值对  </span>
+    <span class="keyword">if</span> (sThreadLocal.get() != <span class="keyword">null</span>) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Only one Looper may be created per thread"</span>);
+    }
+    sThreadLocal.set(<span class="keyword">new</span> Looper(quitAllowed));
+}
+
+
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Looper</span> </span>{
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String TAG = <span class="string">"Looper"</span>;
+<span class="comment">// sThreadLocal.get() will return null unless you've called prepare().</span>
+<span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;Looper&gt; sThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;Looper&gt;();
+<span class="keyword">private</span> <span class="keyword">static</span> Looper sMainLooper;  <span class="comment">// guarded by Looper.class</span>
+<span class="keyword">final</span> MessageQueue mQueue;
+
+
+
+<span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;Looper&gt; sThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;Looper&gt;();
+
+
+<span class="keyword">public</span> <span class="keyword">static</span> Looper <span class="title">myLooper</span>() {
+    <span class="keyword">return</span> sThreadLocal.get();
+}
+</code></pre><p>分享，所以有时new Handler的时候不是在UI线程，这样是不能更新UI的，可以new Handler(Looper.getMainLooper());来传入UI线程的Looper。网上有一种解决办法是调用looper.prepare() 然后在调用looper.loop()，这是错误的。loop的方法这样一句话 for (;;) 会无线循环的，这样线程就会结束了。会引发一系列的问题。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+ 
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"bethkde"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+
+<nav id="pagination" >
+    
+    
+    <a href="/2014/11/18/AsyncTask源码分析/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://baidu.com/" title="Baidu">Baidu</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2014 bethkede
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
