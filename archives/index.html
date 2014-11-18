@@ -67,8 +67,7 @@
     </header>
     <div class="entry">
       
-        <h1 id="自定view的onMeasure和onLayout解析">自定view的onMeasure和onLayout解析</h1>
-<h2 id="onMeasure">onMeasure</h2>
+        <h2 id="onMeasure">onMeasure</h2>
 <p>onMeasure的作用是告诉父控件你需要的宽度和高度，也就是设置自己本身宽高。</p>
 <pre><code><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span>(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)
 </code></pre><p>首先onMeasure这个方法传递的widthMeasureSpec和heightMeasureSpec这2个参数，这2个参数是父View调用的时候传递过来的。里面包含了View的宽高的类型和数值。</p>
