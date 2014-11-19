@@ -160,7 +160,7 @@
 </code></pre><ul>
 <li>被拒绝的任务</li>
 </ul>
-<p>当 Executor 已经关闭，或Executor将有限边界用于最大线程和工作队列容量，且已经饱和时，在方法 execute(java.lang.Runnable) 中提交的新任务将被拒绝。<br>在以上两种情况下，execute 方法都将调用其RejectedExecutionHandler的RejectedExecutionHandler.rejectedExecution(java.lang.Runnable, java.util.concurrent.ThreadPoolExecutor) 方法。下面提供了四种预定义的处理程序策略：</p>
+<p>当Executor已经关闭，或Executor将有限边界用于最大线程和工作队列容量，且已经饱和时，在方法execute(java.lang.Runnable)中提交的新任务将被拒绝。<br>在以上两种情况下，execute方法都将调用其RejectedExecutionHandler的RejectedExecutionHandler.rejectedExecution(java.lang.Runnable, java.util.concurrent.ThreadPoolExecutor) 方法。下面提供了四种预定义的处理程序策略：</p>
 <pre><code>   <span class="number">1</span>. 在默认的 <span class="constant">ThreadPoolExecutor</span>.<span class="constant">AbortPolicy</span> 中，处理程序遭到拒绝将抛出运行时<span class="constant">RejectedExecutionException</span>。
    <span class="number">2</span>. 在 <span class="constant">ThreadPoolExecutor</span>.<span class="constant">CallerRunsPolicy</span>中，线程调用运行该任务的 execute 本身。
    此策略提供简单的反馈控制机制，能够减缓新任务的提交速度。
