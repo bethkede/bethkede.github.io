@@ -74,7 +74,8 @@
 
 
 <p>如果API小于11使用Executors.newSingleThreadExecutor(sThreadFactory)，创建一个单线程的线程池。这个线程池只有一个线程在工作,也就是相当于单线程串行执行所有任务来保证任务顺序执行。</p>
-<p>如果API大于等于11使用SerialExecutor，但是scheduleNext的时候却将任务放入THREAD_POOL_EXECUTOR里面了，SerialExecutor的作用是让任务顺序执行，然后将Task放入线程池。<br>为什么在API11使用了SerialExecutor呢？<br>首先来看ArrayDeque，因为ArrayDeque不是线程安全的，所以，用作堆栈时快于 Stack，在用作队列时快于 LinkedList。而newSingleThreadExecutor使用的是线程安全的LinkedBlockingQueue。这样即保证了线程串行又增加了效率。</p>
+<p>如果API大于等于11使用SerialExecutor，但是scheduleNext的时候却将任务放入THREAD_POOL_EXECUTOR里面了，SerialExecutor的作用是让任务顺序执行，然后将Task放入线程池。</p>
+<p>/////////////////////////<br>猜测<br>为什么在API11使用了SerialExecutor呢？<br>首先来看ArrayDeque，因为ArrayDeque不是线程安全的，所以，用作堆栈时快于 Stack，在用作队列时快于 LinkedList。而newSingleThreadExecutor使用的是线程安全的LinkedBlockingQueue。这样即保证了线程串行又增加了效率。<br>//////////////////////////</p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span>(ThreadFactory threadFactory) {</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService</div><div class="line">            (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,</div><div class="line">                                    <span class="number">0</span>L, TimeUnit.MILLISECONDS,</div><div class="line">                                    <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(),</div><div class="line">                                    threadFactory));</div><div class="line">    }</div></pre></td></tr></table></figure>
 
 
