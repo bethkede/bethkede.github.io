@@ -53,6 +53,44 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2014-11-20T03:15:19.000Z"><a href="/2014/11/20/创建对象之Builder-和-static/">11月 20 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/20/创建对象之Builder-和-static/">创建对象之Builder 和 static</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="Builder">Builder</h3>
+<p>当一个类有很多的参数，其中有必选参数和可选参数，如果通过类的构造方法就需要写很多构造方法，当如果几个相同类型的参数就会变得很微妙，你必须一个一个的去很小心的对应起来。当然还有另外一种写法构造函数只对应必要参数，可选参数通过setter赋值。但是这样也会有一个微妙的问题。你不能再setter完成完成之前或者之后再进行操作，你需要在setter之前冻结他，在setter全部完成之后再解冻，所以这是很繁琐的。<br>使用builder模式创建对象可以很好的解决这个问题。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2014/11/20/创建对象之Builder-和-static/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2014-11-19T01:25:37.000Z"><a href="/2014/11/19/JAVA线程池解析/">11月 19 2014</a></time>
       
       

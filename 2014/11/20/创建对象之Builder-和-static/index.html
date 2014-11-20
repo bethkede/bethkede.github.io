@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>创建对象之Builder 和 static | Bethkede&#39;s blog</title>
+  <meta name="author" content="bethkede">
+  
+  <meta name="description" content="This is a blog of android">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="创建对象之Builder 和 static"/>
+  <meta property="og:site_name" content="Bethkede&#39;s blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Bethkede&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Bethkede&#39;s blog</a></h1>
+  <h2><a href="/">有时候生存往往比命运还残酷，只是没有人愿意认输</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-11-20T03:15:19.000Z"><a href="/2014/11/20/创建对象之Builder-和-static/">11月 20 2014</a></time>
+      
+      
+  
+    <h1 class="title">创建对象之Builder 和 static</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="Builder">Builder</h3>
+<p>当一个类有很多的参数，其中有必选参数和可选参数，如果通过类的构造方法就需要写很多构造方法，当如果几个相同类型的参数就会变得很微妙，你必须一个一个的去很小心的对应起来。当然还有另外一种写法构造函数只对应必要参数，可选参数通过setter赋值。但是这样也会有一个微妙的问题。你不能再setter完成完成之前或者之后再进行操作，你需要在setter之前冻结他，在setter全部完成之后再解冻，所以这是很繁琐的。<br>使用builder模式创建对象可以很好的解决这个问题。</p>
+<a id="more"></a>
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">Person.Builder builder = <span class="keyword">new</span> Person.Builder(<span class="number">1</span>, <span class="string">"xing"</span>, <span class="number">25</span>);  </div><div class="line">Person person = builder.setCity(<span class="string">"beijing"</span>).setSex().build();  </div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">class</span> Person {  </div><div class="line">    <span class="comment">// 必须的参数  </span></div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;  </div><div class="line">    <span class="keyword">private</span> String name;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> age;  </div><div class="line">  </div><div class="line">    <span class="comment">// 可选参数  </span></div><div class="line">    <span class="keyword">private</span> String city;  </div><div class="line">    <span class="keyword">private</span> String hoby;  </div><div class="line">    <span class="keyword">private</span> String job;  </div><div class="line">    <span class="keyword">private</span> String sex;  </div><div class="line">  </div><div class="line">    <span class="comment">// 私有构造函数  </span></div><div class="line">    <span class="keyword">private</span> <span class="title">Person</span>(Builder builder) {  </div><div class="line">        <span class="keyword">this</span>.id = builder.id;  </div><div class="line">        <span class="keyword">this</span>.name = builder.name;  </div><div class="line">        <span class="keyword">this</span>.age = builder.age;  </div><div class="line">        <span class="keyword">this</span>.city = builder.city;  </div><div class="line">        <span class="keyword">this</span>.hoby = builder.hoby;  </div><div class="line">        <span class="keyword">this</span>.job = builder.job;  </div><div class="line">        <span class="keyword">this</span>.sex = builder.sex;  </div><div class="line">    }  </div><div class="line">  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> Builder {  </div><div class="line">        <span class="comment">// 必须的参数  </span></div><div class="line">        <span class="keyword">private</span> <span class="keyword">int</span> id;  </div><div class="line">        <span class="keyword">private</span> String name;  </div><div class="line">        <span class="keyword">private</span> <span class="keyword">int</span> age;  </div><div class="line">  </div><div class="line">        <span class="comment">// 可选参数  </span></div><div class="line">        <span class="keyword">private</span> String city;  </div><div class="line">        <span class="keyword">private</span> String hoby;  </div><div class="line">        <span class="keyword">private</span> String job;  </div><div class="line">        <span class="keyword">private</span> String sex;  </div><div class="line">  </div><div class="line">        <span class="comment">// 设置必须的参数  </span></div><div class="line">        <span class="keyword">public</span> <span class="title">Builder</span>(<span class="keyword">int</span> id, String name, <span class="keyword">int</span> age) {  </div><div class="line">            <span class="keyword">this</span>.id = id;  </div><div class="line">            <span class="keyword">this</span>.name = name;  </div><div class="line">            <span class="keyword">this</span>.age = age;  </div><div class="line">        }  </div><div class="line">          </div><div class="line">        <span class="comment">// 设置可选参数, 返回Builder对象可以让调用者使用级联  </span></div><div class="line">        <span class="keyword">public</span> Builder <span class="title">setCity</span>(String city) {  </div><div class="line">            <span class="keyword">this</span>.city = city;  </div><div class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;  </div><div class="line">        }  </div><div class="line">          </div><div class="line">        <span class="keyword">public</span> Builder <span class="title">setHoby</span>(String hoby) {  </div><div class="line">            <span class="keyword">this</span>.hoby = hoby;  </div><div class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;  </div><div class="line">        }  </div><div class="line">          </div><div class="line">        <span class="keyword">public</span> Builder <span class="title">setJob</span> (String job) {  </div><div class="line">            <span class="keyword">this</span>.job = job;  </div><div class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;  </div><div class="line">        }  </div><div class="line">          </div><div class="line">        <span class="keyword">public</span> Builder <span class="title">setSex</span>(String sex) {  </div><div class="line">            <span class="keyword">this</span>.sex = sex;  </div><div class="line">            <span class="keyword">return</span> <span class="keyword">this</span>;  </div><div class="line">        }  </div><div class="line">          </div><div class="line">        <span class="keyword">public</span> Person <span class="title">build</span>() {  </div><div class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Person(<span class="keyword">this</span>);  </div><div class="line">        }  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>一般来说最好能重用对象而不是每次都创建对象。<br>例如下面的代码，如果多次调用效率会显著的提升。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">class</span> Person {</div><div class="line"></div><div class="line">    <span class="keyword">private</span> Date birthDate;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> boolean <span class="title">isBabyBoomer</span>() {</div><div class="line">        Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone(<span class="string">"GMT"</span>));</div><div class="line">        gmtCal.<span class="keyword">set</span>(<span class="number">1946</span>, Calendar.JANUARY, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">        Date boomStart = gmtCal.getTime();</div><div class="line">        gmtCal.<span class="keyword">set</span>(<span class="number">1965</span>, Calendar.JANUARY, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">        Date boomEnd = gmtCal.getTime();</div><div class="line">        <span class="keyword">return</span> birthDate.compareTo(boomStart) &gt;= <span class="number">0</span> && birthDate.compareTo(boomEnd) &lt; <span class="number">0</span>;</div><div class="line">    }</div><div class="line">}</div><div class="line"></div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">class</span> Person2 {</div><div class="line"></div><div class="line">    <span class="keyword">private</span> Date birthDate;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Date BOOM_START;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Date BOOM_END;</div><div class="line"></div><div class="line">    <span class="keyword">static</span> {</div><div class="line">        Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone(<span class="string">"GMT"</span>));</div><div class="line">        gmtCal.<span class="keyword">set</span>(<span class="number">1946</span>, Calendar.JANUARY, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">        BOOM_START = gmtCal.getTime();</div><div class="line">        gmtCal.<span class="keyword">set</span>(<span class="number">1965</span>, Calendar.JANUARY, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">        BOOM_END = gmtCal.getTime();</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> boolean <span class="title">isBabyBoomer</span>() {</div><div class="line">        <span class="keyword">return</span> birthDate.compareTo(BOOM_START) &gt;= <span class="number">0</span> && birthDate.compareTo(BOOM_END) &lt; <span class="number">0</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+ 
+<!-- 多说评论框 start -->
+  <div class="ds-thread" data-thread-key="请将此处替换成文章在你的站点中的ID" data-title="请替换成文章的标题" data-url="请替换成文章的网址"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"bethkde"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+
+
+<nav id="pagination" >
+    
+    
+    <a href="/2014/11/19/JAVA线程池解析/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://baidu.com/" title="Baidu">Baidu</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2014 bethkede
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
