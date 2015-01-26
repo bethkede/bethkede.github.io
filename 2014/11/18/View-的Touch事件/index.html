@@ -46,65 +46,7 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-11-18T05:36:46.000Z"><a href="/2014/11/18/View-的Touch事件/">11月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title">View 的Touch事件</h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>Android中的触摸事件传递一般需要了解onInterceptTouchEvent与onTouchEvent。<br>onInterceptTouchEvent是在ViewGroup里面定义的。Android中的layout布局类一般都是继承此类的。onInterceptTouchEvent是用于拦截手势事件的，每个手势事件都会先调用onInterceptTouchEvent。onTouchEvent是定义于View中的一个方法，处理传递到View的手势触摸事件。</p>
-<a id="more"></a>
-
-<p>一般手势的类型ACTION_DOWN,ACTION_MOVE,ACTION_UP,ACTION_CANCEL等，ACTION_POINTER_DOWN,ACTION_POINTER_UP一般用处处理多点触摸。</p>
-<p>onTouchEvent一般用于处理事件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> boolean <span class="title">onTouchEvent</span>(MotionEvent <span class="keyword">event</span>) {</div><div class="line">    <span class="keyword">switch</span> (<span class="keyword">event</span>.getAction()) {</div><div class="line">    <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</div><div class="line">    <span class="comment">//按下</span></div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> MotionEvent.ACTION_MOVE:</div><div class="line">    <span class="comment">//滑动</span></div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> MotionEvent.ACTION_UP:</div><div class="line">     <span class="comment">//抬起</span></div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> MotionEvent.ACTION_CANCEL:</div><div class="line">    <span class="comment">//画出屏幕</span></div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> super.onTouchEvent(<span class="keyword">event</span>);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>onInterceptTouchEvent一般处理事件的拦截，只有ViewGroup才会有，用于在进入自身onTouchEvent或者子组件onTouchEvent之前处理事件。注意onTouch是自上而下传递，而onInterceptTouch却是由下而上传递的。来了一个DOWN事件，首先进入的必然是最底层的viewGroup的onInterceptTouchEvent方法，然后根据return的值进入自身或者子组件的onTouch事件，当然如果子组件也是viewgroup的话，在进入子组件的onTouch之前也会进入子组件的onInterceptTouchEvent方法。<br>下面也分几种情况介绍：<br>1.当onInterceptTouchEvent返回false时，表示没有消费完此事件，会继续传递个子组件的onTouch继续处理。注意这种情况不会就不会传递给这个ViewGroup自身的onTouch事件处理了。这和onTouch如果返回false，后续的move、up等事件都不会继续处理了可以做同样理解。<br>2.当onInterceptTouchEvent返回true时，表示消费完此事件，或者说将在此组件上消费该事件。这种情况该事件会传递给ViewGroup自身的onTouch事件去处理，而不会传递给子组件的onTouch方法了。<br>由此可以总结，onInterceptTouchEvent返回值只是决定了是要把事件传递给自身的onTouch事件还是传递给子组件的onTouch事件。返回false表示没有消费完将传递个子组件的onTouch方法，返回true表示自身消费此事件，将传递给自身的onTouch方法而不会传递给子组件的onTouch方法了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-        
-  <div class="addthis addthis_toolbox addthis_default_style">
-    
-      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
-    
-    
-      <a class="addthis_button_tweet"></a>
-    
-    
-      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
-    
-    
-      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
-    
-    <a class="addthis_counter addthis_pill_style"></a>
-  </div>
-  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
-
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-<section id="comment">
- 
-<!-- 多说评论框 start -->
+    <div id="main-col" class="alignleft"><div id="wrapper"><!-- 多说评论框 start -->
   <div class="ds-thread" data-thread-key="请将此处替换成文章在你的站点中的ID" data-title="请替换成文章的标题" data-url="请替换成文章的网址"></div>
 <!-- 多说评论框 end -->
 <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
@@ -120,22 +62,6 @@ var duoshuoQuery = {short_name:"bethkde"};
   })();
   </script>
 <!-- 多说公共JS代码 end -->
-
-
-
-
-<nav id="pagination" >
-    
-    <a href="/2014/11/18/AsyncTask源码分析/" class="alignleft prev" >上一页</a>
-    
-    
-    <a href="/2014/11/18/自定view的onMeasure和onLayout解析/" class="alignright next" >下一页</a>
-    
-    <div class="clearfix"></div>
-</nav>
-
-</section>
-
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
